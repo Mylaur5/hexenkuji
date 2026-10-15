@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d1a3d"/>
+      <stop offset="1" stop-color="#14122b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <!-- fortune slip -->
+  <g transform="rotate(-8 512 512)">
+    <rect x="330" y="120" width="364" height="784" rx="26" fill="#ece6d8"/>
+    <rect x="330" y="120" width="364" height="110" rx="26" fill="#e8b923"/>
+    <rect x="330" y="190" width="364" height="40" fill="#e8b923"/>
+    <circle cx="512" cy="175" r="24" fill="#14122b"/>
+    <g font-family="Noto Sans CJK JP" font-weight="900" font-size="270" text-anchor="middle" fill="#c8452d">
+      <text x="512" y="520">大</text>
+      <text x="512" y="800">吉</text>
+    </g>
+  </g>
+</svg>
