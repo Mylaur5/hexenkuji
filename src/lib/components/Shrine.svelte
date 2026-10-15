@@ -8,6 +8,42 @@
   let pending = $state(null); // tier id awaiting "add anyway"
   let recent = $derived([...data.shrine].reverse().slice(0, 8));
 
+  // Luck score: tiers are evenly spaced from 100 (Great Fortune) to 0 (Great Misfortune).
+  const score = (tierId) => 100 - TIERS.findIndex((t) => t.id === tierId) * 20;
+  const isBad = (tierId) => tierId === "misfortune" || tierId === "great-misfortune";
+
+  const daysAgo = (date) => Math.round((new Date(today()) - new Date(date)) / 86400000);
+
+  let stats = $derived.by(() => {
+    if (!data.shrine.length) return null;
+    const sorted = [...data.shrine].sort((a, b) => a.date.localeCompare(b.date));
+    const luck = Math.round(sorted.reduce((s, e) => s + score(e.tier), 0) / sorted.length);
+    const bad = sorted.filter((e) => isBad(e.tier)).length;
+
+    let best = 0;
+    let run = 0;
+    for (const e of sorted) {
+      run = isBad(e.tier) ? 0 : run + 1;
+      best = Math.max(best, run);
+    }
+
+    const last = (tier) => [...sorted].reverse().find((e) => e.tier === tier)?.date;
+    return {
+      luck,
+      goodPct: Math.round(((sorted.length - bad) / sorted.length) * 100),
+      streak: run,
+      best,
+      lastGreat: last("great-fortune"),
+      lastCurse: last("great-misfortune"),
+    };
+  });
+
+  const ago = (date) => {
+    if (!date) return "never";
+    const n = daysAgo(date);
+    return `${date} (${n === 0 ? "today" : `${n}d ago`})`;
+  };
+
   async function pick(id) {
     if (hasShrineOn(date) && pending !== id) {
       pending = id;
@@ -38,6 +74,24 @@
       </button>
     {/each}
   </div>
+
+  {#if stats}
+    <dl class="stats">
+      <dt>Luck</dt>
+      <dd>
+        <span class="meter"><span style="width:{stats.luck}%"></span></span>
+        {stats.luck} / 100
+      </dd>
+      <dt>Fortunate draws</dt>
+      <dd>{stats.goodPct}% not a misfortune</dd>
+      <dt>Streak</dt>
+      <dd>{stats.streak} without misfortune · best {stats.best}</dd>
+      <dt>Last Great Fortune</dt>
+      <dd>{ago(stats.lastGreat)}</dd>
+      <dt>Last Great Misfortune</dt>
+      <dd>{ago(stats.lastCurse)}</dd>
+    </dl>
+  {/if}
 
   {#if recent.length}
     <ul class="log">
@@ -119,6 +173,38 @@
     bottom: 0;
     height: 3px;
     background: var(--c);
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.25rem 0.9rem;
+    margin: 0.9rem 0 0;
+    padding: 0.6rem 0.8rem;
+    background: var(--panel);
+    border-left: 3px solid var(--gold);
+    border-radius: 6px;
+    font-size: 0.8rem;
+  }
+  .stats dt {
+    color: var(--dim);
+  }
+  .stats dd {
+    margin: 0;
+  }
+  .meter {
+    display: inline-block;
+    vertical-align: middle;
+    width: 6rem;
+    height: 6px;
+    margin-right: 0.4rem;
+    background: var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .meter span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #6a3d8f, #e8b923);
   }
   .log {
     list-style: none;
