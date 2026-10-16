@@ -3,18 +3,33 @@ import { TIERS, TIER_BY_ID } from "./tiers.js";
 import { SLIPS, SLIP_BY_ID } from "./slips.js";
 
 // Persisted as fortunes.json in the app data dir:
-// { shrine: [{ date, tier }], theater: [{ season, date, slipId }] }
+// { shrine: [{ date, tier }], theater: [{ season, date, slipId }], region }
 // Counts are always derived from these logs.
 
 let file = null;
 
-export const data = $state({ shrine: [], theater: [], ready: false, error: "" });
+const DEFAULT_REGION = "europe";
+
+export const data = $state({ shrine: [], theater: [], region: DEFAULT_REGION, ready: false, error: "" });
 
 const pad = (n) => String(n).padStart(2, "0");
 
+// Genshin's day rolls over at 04:00 server time, and servers don't observe DST.
+export const REGIONS = [
+  { id: "europe", name: "Europe", offset: 1 },
+  { id: "america", name: "America", offset: -5 },
+  { id: "asia", name: "Asia", offset: 8 },
+  { id: "tw-hk-mo", name: "TW, HK, MO", offset: 8 },
+];
+const REGION_BY_ID = new Map(REGIONS.map((r) => [r.id, r]));
+const RESET_HOUR = 4;
+
+// The current game day, so a draw at 01:00 still counts for the previous day.
+// Seasons (seasonOf) derive from this too, so Theater flips at 04:00 on the 1st.
 export function today() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const offset = REGION_BY_ID.get(data.region).offset;
+  const d = new Date(Date.now() + (offset - RESET_HOUR) * 3600000);
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
 }
 
 export const seasonOf = (date) => date.slice(0, 7);
@@ -23,6 +38,7 @@ async function save() {
   try {
     await file.set("shrine", $state.snapshot(data.shrine));
     await file.set("theater", $state.snapshot(data.theater));
+    await file.set("region", data.region);
     await file.save();
   } catch (e) {
     data.error = `Could not save: ${e}`;
@@ -34,10 +50,18 @@ export async function init() {
     file = await load("fortunes.json", { autoSave: false, defaults: {} });
     data.shrine = (await file.get("shrine")) ?? [];
     data.theater = (await file.get("theater")) ?? [];
+    const region = await file.get("region");
+    data.region = REGION_BY_ID.has(region) ? region : DEFAULT_REGION;
   } catch (e) {
     data.error = `Could not load: ${e}`;
   }
   data.ready = true;
+}
+
+export async function setRegion(region) {
+  if (!REGION_BY_ID.has(region)) return;
+  data.region = region;
+  await save();
 }
 
 // --- shrine -----------------------------------------------------------

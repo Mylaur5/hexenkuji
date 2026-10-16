@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import Shrine from "$lib/components/Shrine.svelte";
   import Theater from "$lib/components/Theater.svelte";
-  import { data, init, exportJson, importJson } from "$lib/store.svelte.js";
+  import { data, init, exportJson, importJson, REGIONS, setRegion } from "$lib/store.svelte.js";
 
   let tab = $state("shrine");
   let backup = $state("");
@@ -44,11 +44,25 @@
 
   {#if !data.ready}
     <p class="dim">Loading…</p>
-  {:else if tab === "shrine"}
-    <Shrine />
   {:else}
-    <Theater />
+    <!-- Remount on region change so the date pickers pick up the new game day. -->
+    {#key data.region}
+      {#if tab === "shrine"}<Shrine />{:else}<Theater />{/if}
+    {/key}
   {/if}
+
+  <details>
+    <summary>Settings</summary>
+    <label class="setting">
+      Server region
+      <select value={data.region} onchange={(e) => setRegion(e.currentTarget.value)}>
+        {#each REGIONS as r (r.id)}
+          <option value={r.id}>{r.name} (UTC{r.offset >= 0 ? "+" : ""}{r.offset})</option>
+        {/each}
+      </select>
+    </label>
+    <p class="dim">The day resets at 04:00 server time.</p>
+  </details>
 
   <details>
     <summary>Backup</summary>
@@ -92,7 +106,7 @@
     font-size: 0.75rem;
     color: var(--dim);
   }
-  :global(input, textarea) {
+  :global(input, textarea, select) {
     padding: 0.35rem 0.5rem;
     background: var(--panel);
     border: 1px solid var(--line);
@@ -154,6 +168,12 @@
     margin-top: 1.5rem;
     font-size: 0.85rem;
     color: var(--dim);
+  }
+  .setting {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
   }
   .backup {
     display: flex;
