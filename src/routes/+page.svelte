@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import { getVersion } from "@tauri-apps/api/app";
   import Shrine from "$lib/components/Shrine.svelte";
   import Theater from "$lib/components/Theater.svelte";
   import { data, init, exportJson, importJson, REGIONS, setRegion } from "$lib/store.svelte.js";
@@ -8,7 +9,12 @@
   let backup = $state("");
   let message = $state("");
 
-  onMount(init);
+  let version = $state("");
+
+  onMount(() => {
+    init();
+    getVersion().then((v) => (version = v)).catch(() => {});
+  });
 
   async function copy() {
     try {
@@ -73,6 +79,7 @@
       {#if message}<p class="dim">{message}</p>{/if}
     </div>
   </details>
+  {#if version}<footer class="dim">Hexenkuji v{version}</footer>{/if}
 </main>
 
 <style>
@@ -174,6 +181,10 @@
     align-items: center;
     gap: 0.5rem;
     margin-top: 0.5rem;
+  }
+  footer {
+    margin-top: 1.5rem;
+    text-align: center;
   }
   .backup {
     display: flex;
