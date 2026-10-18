@@ -23,7 +23,7 @@
   async function restore() {
     try {
       const n = await importJson(backup);
-      message = `Imported ${n.shrine} shrine and ${n.theater} theater entries.`;
+      message = `Imported ${n.shrine} shrine, ${n.theater} theater and ${n.variants} quest slip entries.`;
       backup = "";
     } catch (e) {
       message = `Import failed: ${e.message}`;
