@@ -1,6 +1,6 @@
 {
   "name": "hexenkuji",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Genshin Impact fortune slip tracker",
   "type": "module",
   "scripts": {
