@@ -11,3 +11,4 @@ vite.config.ts.timestamp-*
 
 # Local editor setup (tasks use the local fedora distrobox)
 /.vscode
+*.code-workspace
